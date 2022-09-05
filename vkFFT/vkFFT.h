@@ -36108,15 +36108,6 @@ static inline VkFFTResult VkFFTPlanAxis(VkFFTApplication* app, VkFFTPlan* FFTPla
 				/* .maxTaskWorkGroupSizeY_NV = */ 1,
 				/* .maxTaskWorkGroupSizeZ_NV = */ 1,
 				/* .maxMeshViewCountNV = */ 4,
-				/* .max_mesh_output_vertices_ext = */ 256,
-				/* .max_mesh_output_primitives_ext = */ 512,
-				/* .max_mesh_work_group_size_x_ext = */ 32,
-				/* .max_mesh_work_group_size_y_ext = */ 1,
-				/* .max_mesh_work_group_size_z_ext = */ 1,
-				/* .max_task_work_group_size_x_ext = */ 32,
-				/* .max_task_work_group_size_y_ext = */ 1,
-				/* .max_task_work_group_size_z_ext = */ 1,
-				/* .maxMeshViewCountNV = */ 4,
 				/* .maxDualSourceDrawBuffersEXT = */ 1,
 
 				/* .limits = */ {
