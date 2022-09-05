@@ -142,9 +142,9 @@ typedef struct {
 	void** outputBuffer;//pointer to device buffer used to read data from if isOutputFormatted is enabled
 	void** kernel;//pointer to device buffer used to read kernel data from if performConvolution is enabled
 #endif
-	uint64_t bufferOffset;//specify if VkFFT has to offset the first element position inside the buffer. In bytes. Default 0 
-	uint64_t tempBufferOffset;//specify if VkFFT has to offset the first element position inside the temp buffer. In bytes. Default 0 
-	uint64_t inputBufferOffset;//specify if VkFFT has to offset the first element position inside the input buffer. In bytes. Default 0 
+	uint64_t bufferOffset;//specify if VkFFT has to offset the first element position inside the buffer. In bytes. Default 0
+	uint64_t tempBufferOffset;//specify if VkFFT has to offset the first element position inside the temp buffer. In bytes. Default 0
+	uint64_t inputBufferOffset;//specify if VkFFT has to offset the first element position inside the input buffer. In bytes. Default 0
 	uint64_t outputBufferOffset;//specify if VkFFT has to offset the first element position inside the output buffer. In bytes. Default 0
 	uint64_t kernelOffset;//specify if VkFFT has to offset the first element position inside the kernel. In bytes. Default 0
 	uint64_t specifyOffsetsAtLaunch;//specify if offsets will be selected with launch parameters VkFFTLaunchParams (0 - off, 1 - on). Default 0
@@ -157,7 +157,7 @@ typedef struct {
 	uint64_t numberBatches;// N - used to perform multiple batches of initial data. Default 1
 	uint64_t useUint64;// use 64-bit addressing mode in generated kernels
 	uint64_t omitDimension[3];//disable FFT for this dimension (0 - FFT enabled, 1 - FFT disabled). Default 0. Doesn't work for R2C dimension 0 for now. Doesn't work with convolutions.
-	uint64_t performBandwidthBoost;//try to reduce coalsesced number by a factor of X to get bigger sequence in one upload for strided axes. Default: -1 for DCT, 2 for Bluestein's algorithm (or -1 if DCT), 0 otherwise 
+	uint64_t performBandwidthBoost;//try to reduce coalsesced number by a factor of X to get bigger sequence in one upload for strided axes. Default: -1 for DCT, 2 for Bluestein's algorithm (or -1 if DCT), 0 otherwise
 
 	uint64_t doublePrecision; //perform calculations in double precision (0 - off, 1 - on).
 	uint64_t halfPrecision; //perform calculations in half precision (0 - off, 1 - on)
@@ -184,7 +184,7 @@ typedef struct {
 	uint64_t printMemoryLayout;//will print order of buffers used in shaders (0 - off, 1 - on)
 
 	uint64_t saveApplicationToString;//will save all compiled binaries to VkFFTApplication.saveApplicationString (will be allocated by VkFFT, deallocated with deleteVkFFT call). (0 - off, 1 - on)
-	
+
 	uint64_t loadApplicationFromString;//will load all binaries from loadApplicationString instead of recompiling them (must be allocated by user, must contain what saveApplicationToString call generated previously in VkFFTApplication.saveApplicationString). (0 - off, 1 - on). Mutually exclusive with saveApplicationToString
 	void* loadApplicationString;//memory binary array through which user can load VkFFT binaries, must be provided by user if loadApplicationFromString = 1. Use rb/wb flags to load/save.
 
@@ -193,7 +193,7 @@ typedef struct {
 	//optional Bluestein optimizations: (default 0 if not stated otherwise)
 	uint64_t fixMaxRadixBluestein;//controls the padding of sequences in Bluestein convolution. If specified, padded sequence will be made of up to fixMaxRadixBluestein primes. Default: 2 for CUDA and Vulkan/OpenCL/HIP up to 1048576 combined dimension FFT system, 7 for Vulkan/OpenCL/HIP past after. Min = 2, Max = 13.
 	uint64_t forceBluesteinSequenceSize;// force the sequence size to pad to in Bluestein's algorithm. Must be at least 2*N-1 and decomposable with primes 2-13.
-	uint64_t useCustomBluesteinPaddingPattern;// force the sequence sizes to pad to in Bluestein's algorithm, but on a range. This number specifies the number of elements in primeSizes and in paddedSizes arrays. primeSizes - array of non-decomposable as radix scheme sizes - 17, 23, 31 etc. 
+	uint64_t useCustomBluesteinPaddingPattern;// force the sequence sizes to pad to in Bluestein's algorithm, but on a range. This number specifies the number of elements in primeSizes and in paddedSizes arrays. primeSizes - array of non-decomposable as radix scheme sizes - 17, 23, 31 etc.
 											  // paddedSizes - array of lengths to pad to. paddedSizes[i] will be the padding size for all non-decomposable sequences from primeSizes[i] to primeSizes[i+1] (will use default scheme after last one) - 42, 60, 64 for primeSizes before and 37+ will use default scheme (for example). Default is vendor and API-based specified in autoCustomBluesteinPaddingPattern.
 	uint64_t* primeSizes; // described in useCustomBluesteinPaddingPattern
 	uint64_t* paddedSizes; // described in useCustomBluesteinPaddingPattern
@@ -201,7 +201,7 @@ typedef struct {
 	uint64_t fixMinRaderPrimeMult;//start direct multiplication Rader's algorithm for radix primes from this number. This means that VkFFT will inline custom Rader kernels if sequence is divisible by these primes. Default is 17, as VkFFT has kernels for 2-13. If you make it less than 13, VkFFT will switch from these kernels to Rader.
 	uint64_t fixMaxRaderPrimeMult;//switch from Mult Rader's algorithm for radix primes from this number. Current limitation for Rader is maxThreadNum/2+1, realistically you would want to switch somewhere on 30-100 range. Default is vendor-specific (currently ~40)
 
-	uint64_t fixMinRaderPrimeFFT;//start FFT convolution version of Rader for radix primes from this number. Better than direct multiplication version for almost all primes (except small ones, like 17-23 on some GPUs). Must be bigger or equal to fixMinRaderPrimeMult. Deafult 29 on AMD and 17 on other GPUs. 
+	uint64_t fixMinRaderPrimeFFT;//start FFT convolution version of Rader for radix primes from this number. Better than direct multiplication version for almost all primes (except small ones, like 17-23 on some GPUs). Must be bigger or equal to fixMinRaderPrimeMult. Deafult 29 on AMD and 17 on other GPUs.
 	uint64_t fixMaxRaderPrimeFFT;//switch to Bluestein's algorithm for radix primes from this number. Switch may happen earlier if prime can't fit in shared memory. Default is 16384, which is bigger than most current GPU's shared memory.
 
 	//optional zero padding control parameters: (default 0 if not stated otherwise)
@@ -306,9 +306,9 @@ typedef struct {
 	void** kernel;//pointer to device buffer used to read kernel data from if performConvolution is enabled
 #endif
 	//following parameters can be specified during kernels launch, if specifyOffsetsAtLaunch parameter was enabled during the initializeVkFFT call
-	uint64_t bufferOffset;//specify if VkFFT has to offset the first element position inside the buffer. In bytes. Default 0 
-	uint64_t tempBufferOffset;//specify if VkFFT has to offset the first element position inside the temp buffer. In bytes. Default 0 
-	uint64_t inputBufferOffset;//specify if VkFFT has to offset the first element position inside the input buffer. In bytes. Default 0 
+	uint64_t bufferOffset;//specify if VkFFT has to offset the first element position inside the buffer. In bytes. Default 0
+	uint64_t tempBufferOffset;//specify if VkFFT has to offset the first element position inside the temp buffer. In bytes. Default 0
+	uint64_t inputBufferOffset;//specify if VkFFT has to offset the first element position inside the input buffer. In bytes. Default 0
 	uint64_t outputBufferOffset;//specify if VkFFT has to offset the first element position inside the output buffer. In bytes. Default 0
 	uint64_t kernelOffset;//specify if VkFFT has to offset the first element position inside the kernel. In bytes. Default 0
 } VkFFTLaunchParams;//parameters specified at plan execution
@@ -7027,7 +7027,7 @@ static inline VkFFTResult appendSharedMemoryVkFFT(VkFFTSpecializationConstantsLa
 
 				for (uint64_t j = 0; j < sc->raderContainer[i].numStages; j++) {
 					if (sc->raderContainer[i].containerFFTNum < 8) {
-						uint64_t subLogicalGroupSize = (uint64_t)ceil(sc->raderContainer[i].containerFFTDim / (double)sc->raderContainer[i].registers_per_thread_per_radix[sc->raderContainer[i].stageRadix[j]]); // hopefully it is not <1, will fix 
+						uint64_t subLogicalGroupSize = (uint64_t)ceil(sc->raderContainer[i].containerFFTDim / (double)sc->raderContainer[i].registers_per_thread_per_radix[sc->raderContainer[i].stageRadix[j]]); // hopefully it is not <1, will fix
 						uint64_t shift = (subLogicalGroupSize > (sc->raderContainer[i].containerFFTDim % (sc->numSharedBanks / 2))) ? subLogicalGroupSize - sc->raderContainer[i].containerFFTDim % (sc->numSharedBanks / 2) : 0;
 						if (j == 0) shift = (sc->raderContainer[i].containerFFTDim % (sc->numSharedBanks / 2)) ? 0 : 1;
 						uint64_t loc_stride = sc->raderContainer[i].containerFFTDim + shift;
@@ -14730,7 +14730,7 @@ static inline VkFFTResult appendFFTRaderStage(VkFFTSpecializationConstantsLayout
 		uint64_t locFFTDim = sc->currentRaderContainer->containerFFTDim; //different length due to all -1 cutoffs
 		uint64_t locFFTsCombined = sc->currentRaderContainer->containerFFTNum * locFFTDim;
 		uint64_t logicalGroupSize = (uint64_t)ceil(locFFTsCombined / (double)logicalStoragePerThread);
-		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix 
+		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix
 
 		if (!raderTranspose) {
 			sc->tempLen = sprintf(sc->tempStr, "\
@@ -14799,7 +14799,7 @@ static inline VkFFTResult appendFFTRaderStage(VkFFTSpecializationConstantsLayout
 		uint64_t locFFTDim = sc->currentRaderContainer->containerFFTDim; //different length due to all -1 cutoffs
 		uint64_t locFFTsCombined = sc->currentRaderContainer->containerFFTNum * locFFTDim;
 		uint64_t logicalGroupSize = (uint64_t)ceil(locFFTsCombined / (double)logicalStoragePerThread);
-		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix 
+		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix
 		if (!raderTranspose) {
 			sc->tempLen = sprintf(sc->tempStr, "\
 		%s = %s %% %" PRIu64 ";\n", sc->raderIDx, gl_LocalInvocationID, subLogicalGroupSize); //local id
@@ -14893,7 +14893,7 @@ static inline VkFFTResult appendFFTRaderStage(VkFFTSpecializationConstantsLayout
 		uint64_t locFFTDim = sc->currentRaderContainer->containerFFTDim; //different length due to all -1 cutoffs
 		uint64_t locFFTsCombined = sc->currentRaderContainer->containerFFTNum * locFFTDim;
 		uint64_t logicalGroupSize = (uint64_t)ceil(locFFTsCombined / (double)logicalStoragePerThread);
-		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix 
+		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix
 		uint64_t locFFTDimStride = locFFTDim;
 		if (shift <= sc->sharedShiftRaderFFT) locFFTDimStride = locFFTDim + shift;
 		//local radix
@@ -15418,7 +15418,7 @@ sdata[sharedStride * gl_LocalInvocationID.y + inoutID + %" PRIu64 "] = temp%s%s;
 		uint64_t locFFTDim = sc->currentRaderContainer->containerFFTDim; //different length due to all -1 cutoffs
 		uint64_t locFFTsCombined = sc->currentRaderContainer->containerFFTNum * locFFTDim;
 		uint64_t logicalGroupSize = (uint64_t)ceil(locFFTsCombined / (double)logicalStoragePerThread);
-		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix 
+		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix
 		uint64_t locFFTDimStride = locFFTDim; //different length due to all -1 cutoffs
 		if (shift <= sc->sharedShiftRaderFFT) locFFTDimStride = locFFTDim + shift;
 		//local radix
@@ -15911,7 +15911,7 @@ sdata[sharedStride * gl_LocalInvocationID.y + inoutID + %" PRIu64 "] = temp%s%s;
 		uint64_t locFFTDim = sc->currentRaderContainer->containerFFTDim; //different length due to all -1 cutoffs
 		uint64_t locFFTsCombined = sc->currentRaderContainer->containerFFTNum * locFFTDim;
 		uint64_t logicalGroupSize = (uint64_t)ceil(locFFTsCombined / (double)logicalStoragePerThread);
-		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix 
+		uint64_t subLogicalGroupSize = (uint64_t)ceil(locFFTDim / (double)logicalStoragePerThread); // hopefully it is not <1, will fix
 		if (!raderTranspose) {
 			sc->tempLen = sprintf(sc->tempStr, "\
 		%s = %s %% %" PRIu64 ";\n", sc->raderIDx, gl_LocalInvocationID, subLogicalGroupSize); //local id
@@ -16353,7 +16353,7 @@ static inline VkFFTResult appendMultRaderStage(VkFFTSpecializationConstantsLayou
 					if (res != VKFFT_SUCCESS) return res;
 				}
 			}
-			//generator index + shuffle 
+			//generator index + shuffle
 			sc->tempLen = sprintf(sc->tempStr, "\
 		if(%s>0){\n", sc->raderIDx);
 			res = VkAppendLine(sc);
@@ -29016,7 +29016,7 @@ static inline VkFFTResult VkFFTScheduler(VkFFTApplication* app, VkFFTPlan* FFTPl
 			useRaderMult = 0;
 		}
 		if (useRaderMult) {
-			if (tempSequence == 1) usedSharedMemory -= (useRaderMult - 1) * complexSize; //reserve memory for Rader 
+			if (tempSequence == 1) usedSharedMemory -= (useRaderMult - 1) * complexSize; //reserve memory for Rader
 		//check once again
 			if ((axis_id == 0) && (app->configuration.performR2C) && (app->configuration.size[axis_id] > maxSingleSizeNonStrided)) {
 				FFTPlan->actualFFTSizePerAxis[axis_id][axis_id] = app->configuration.size[axis_id] / 2; // now in actualFFTSize - modified dimension size for R2C/DCT
@@ -29921,7 +29921,7 @@ static inline VkFFTResult VkFFTGeneratePhaseVectors(VkFFTApplication* app, VkFFT
 	}
 	kernelPreparationConfiguration.device = app->configuration.device;
 #if(VKFFT_BACKEND==0)
-	kernelPreparationConfiguration.queue = app->configuration.queue; //to allocate memory for LUT, we have to pass a queue, vkGPU->fence, commandPool and physicalDevice pointers 
+	kernelPreparationConfiguration.queue = app->configuration.queue; //to allocate memory for LUT, we have to pass a queue, vkGPU->fence, commandPool and physicalDevice pointers
 	kernelPreparationConfiguration.fence = app->configuration.fence;
 	kernelPreparationConfiguration.commandPool = app->configuration.commandPool;
 	kernelPreparationConfiguration.physicalDevice = app->configuration.physicalDevice;
@@ -29933,7 +29933,7 @@ static inline VkFFTResult VkFFTGeneratePhaseVectors(VkFFTApplication* app, VkFFT
 	kernelPreparationConfiguration.context = app->configuration.context;
 	kernelPreparationConfiguration.commandQueue = app->configuration.commandQueue;
 	kernelPreparationConfiguration.commandQueueID = app->configuration.commandQueueID;
-#endif			
+#endif
 
 	uint64_t bufferSize = (uint64_t)sizeof(float) * 2 * kernelPreparationConfiguration.size[0] * kernelPreparationConfiguration.size[1] * kernelPreparationConfiguration.size[2];
 	if (kernelPreparationConfiguration.doublePrecision) bufferSize *= sizeof(double) / sizeof(float);
@@ -30695,7 +30695,7 @@ static inline VkFFTResult VkFFTGenerateRaderFFTKernel(VkFFTApplication* app, VkF
 
 				kernelPreparationConfiguration.device = app->configuration.device;
 #if(VKFFT_BACKEND==0)
-				kernelPreparationConfiguration.queue = app->configuration.queue; //to allocate memory for LUT, we have to pass a queue, vkGPU->fence, commandPool and physicalDevice pointers 
+				kernelPreparationConfiguration.queue = app->configuration.queue; //to allocate memory for LUT, we have to pass a queue, vkGPU->fence, commandPool and physicalDevice pointers
 				kernelPreparationConfiguration.fence = app->configuration.fence;
 				kernelPreparationConfiguration.commandPool = app->configuration.commandPool;
 				kernelPreparationConfiguration.physicalDevice = app->configuration.physicalDevice;
@@ -30707,7 +30707,7 @@ static inline VkFFTResult VkFFTGenerateRaderFFTKernel(VkFFTApplication* app, VkF
 				kernelPreparationConfiguration.context = app->configuration.context;
 				kernelPreparationConfiguration.commandQueue = app->configuration.commandQueue;
 				kernelPreparationConfiguration.commandQueueID = app->configuration.commandQueueID;
-#endif			
+#endif
 
 				uint64_t bufferSize = (uint64_t)sizeof(float) * 2 * kernelPreparationConfiguration.size[0] * kernelPreparationConfiguration.size[1] * kernelPreparationConfiguration.size[2];
 				if (kernelPreparationConfiguration.doublePrecision) bufferSize *= sizeof(double) / sizeof(float);
@@ -33014,15 +33014,6 @@ static inline VkFFTResult VkFFTPlanR2CMultiUploadDecomposition(VkFFTApplication*
 				/* .maxTaskWorkGroupSizeX_NV = */ 32,
 				/* .maxTaskWorkGroupSizeY_NV = */ 1,
 				/* .maxTaskWorkGroupSizeZ_NV = */ 1,
-				/* .maxMeshViewCountNV = */ 4,
-				/* .max_mesh_output_vertices_ext = */ 256,
-				/* .max_mesh_output_primitives_ext = */ 512,
-				/* .max_mesh_work_group_size_x_ext = */ 32,
-				/* .max_mesh_work_group_size_y_ext = */ 1,
-				/* .max_mesh_work_group_size_z_ext = */ 1,
-				/* .max_task_work_group_size_x_ext = */ 32,
-				/* .max_task_work_group_size_y_ext = */ 1,
-				/* .max_task_work_group_size_z_ext = */ 1,
 				/* .maxMeshViewCountNV = */ 4,
 				/* .maxDualSourceDrawBuffersEXT = */ 1,
 
@@ -37830,7 +37821,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 
 	if (inputLaunchConfiguration.bufferNum == 0)	app->configuration.bufferNum = 1;
 	else app->configuration.bufferNum = inputLaunchConfiguration.bufferNum;
-#if(VKFFT_BACKEND==0) 
+#if(VKFFT_BACKEND==0)
 	if (inputLaunchConfiguration.bufferSize == 0) {
 		deleteVkFFT(app);
 		return VKFFT_ERROR_EMPTY_bufferSize;
@@ -37852,7 +37843,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 	if (app->configuration.userTempBuffer != 0) {
 		if (inputLaunchConfiguration.tempBufferNum == 0)	app->configuration.tempBufferNum = 1;
 		else app->configuration.tempBufferNum = inputLaunchConfiguration.tempBufferNum;
-#if(VKFFT_BACKEND==0) 
+#if(VKFFT_BACKEND==0)
 		if (inputLaunchConfiguration.tempBufferSize == 0) {
 			deleteVkFFT(app);
 			return VKFFT_ERROR_EMPTY_tempBufferSize;
@@ -37883,7 +37874,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 	if (app->configuration.isInputFormatted) {
 		if (inputLaunchConfiguration.inputBufferNum == 0)	app->configuration.inputBufferNum = 1;
 		else app->configuration.inputBufferNum = inputLaunchConfiguration.inputBufferNum;
-#if(VKFFT_BACKEND==0) 
+#if(VKFFT_BACKEND==0)
 		if (inputLaunchConfiguration.inputBufferSize == 0) {
 			deleteVkFFT(app);
 			return VKFFT_ERROR_EMPTY_inputBufferSize;
@@ -37910,7 +37901,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 		if (inputLaunchConfiguration.outputBufferNum == 0)	app->configuration.outputBufferNum = 1;
 		else
 			app->configuration.outputBufferNum = inputLaunchConfiguration.outputBufferNum;
-#if(VKFFT_BACKEND==0) 
+#if(VKFFT_BACKEND==0)
 		if (inputLaunchConfiguration.outputBufferSize == 0) {
 			deleteVkFFT(app);
 			return VKFFT_ERROR_EMPTY_outputBufferSize;
@@ -37936,7 +37927,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 	if (app->configuration.performConvolution) {
 		if (inputLaunchConfiguration.kernelNum == 0)	app->configuration.kernelNum = 1;
 		else app->configuration.kernelNum = inputLaunchConfiguration.kernelNum;
-#if(VKFFT_BACKEND==0) 
+#if(VKFFT_BACKEND==0)
 		if (inputLaunchConfiguration.kernelSize == 0) {
 			deleteVkFFT(app);
 			return VKFFT_ERROR_EMPTY_kernelSize;
@@ -38004,7 +37995,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 	if (inputLaunchConfiguration.inverseReturnToInputBuffer != 0)	app->configuration.inverseReturnToInputBuffer = inputLaunchConfiguration.inverseReturnToInputBuffer;
 
 	if (inputLaunchConfiguration.useLUT != 0)	app->configuration.useLUT = inputLaunchConfiguration.useLUT;
-	
+
 	if (inputLaunchConfiguration.fixMaxRadixBluestein != 0) app->configuration.fixMaxRadixBluestein = inputLaunchConfiguration.fixMaxRadixBluestein;
 	if (inputLaunchConfiguration.forceBluesteinSequenceSize != 0) app->configuration.forceBluesteinSequenceSize = inputLaunchConfiguration.forceBluesteinSequenceSize;
 
@@ -38165,7 +38156,7 @@ static inline VkFFTResult initializeVkFFT(VkFFTApplication* app, VkFFTConfigurat
 	}
 	//temporary set:
 	app->configuration.registerBoost4Step = 1;
-#if(VKFFT_BACKEND==0) 
+#if(VKFFT_BACKEND==0)
 	app->configuration.useUint64 = 0; //No physical addressing mode in Vulkan shaders. Use multiple-buffer support to achieve emulation of physical addressing.
 #endif
 	//uint64_t initSharedMemory = app->configuration.sharedMemorySize;
