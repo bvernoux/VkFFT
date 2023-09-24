@@ -1,9 +1,9 @@
 cmake_minimum_required(VERSION 3.11)
-project(Vulkan_FFT)
+project(VkFFT_TestSuite)
 set(CMAKE_CONFIGURATION_TYPES "Release" CACHE STRING "" FORCE)
 set(CMAKE_BUILD_TYPE "Release" CACHE STRING "" FORCE)
 include(FetchContent)
-set(VKFFT_BACKEND 0 CACHE STRING "0 - Vulkan, 1 - CUDA, 2 - HIP, 3 - OpenCL, 4 - Level Zero")
+set(VKFFT_BACKEND 0 CACHE STRING "0 - Vulkan, 1 - CUDA, 2 - HIP, 3 - OpenCL, 4 - Level Zero, 5 - Metal")
 
 if(${VKFFT_BACKEND} EQUAL 1)
 	option(build_VkFFT_cuFFT_benchmark "Build VkFFT cuFFT benchmark" ON)
@@ -25,7 +25,7 @@ if (MSVC)
 	add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 endif()
 if(build_VkFFT_FFTW_precision)
-	add_executable(${PROJECT_NAME} Vulkan_FFT.cpp
+	add_executable(${PROJECT_NAME} VkFFT_TestSuite.cpp
 		benchmark_scripts/vkFFT_scripts/src/utils_VkFFT.cpp
 		benchmark_scripts/vkFFT_scripts/src/user_benchmark_VkFFT.cpp
 		benchmark_scripts/vkFFT_scripts/src/sample_0_benchmark_VkFFT_single.cpp
@@ -55,7 +55,7 @@ if(build_VkFFT_FFTW_precision)
 		benchmark_scripts/vkFFT_scripts/src/sample_1001_benchmark_VkFFT_double_2_4096.cpp
 		benchmark_scripts/vkFFT_scripts/src/sample_1003_benchmark_VkFFT_single_3d_2_512.cpp)
 else()		
-	add_executable(${PROJECT_NAME} Vulkan_FFT.cpp
+	add_executable(${PROJECT_NAME} VkFFT_TestSuite.cpp
 		benchmark_scripts/vkFFT_scripts/src/utils_VkFFT.cpp
 		benchmark_scripts/vkFFT_scripts/src/user_benchmark_VkFFT.cpp
 		benchmark_scripts/vkFFT_scripts/src/sample_0_benchmark_VkFFT_single.cpp
@@ -86,13 +86,12 @@ elseif(${VKFFT_BACKEND} EQUAL 1)
 	enable_language(CUDA)
 if (MSVC)
 else()
-		set_source_files_properties(Vulkan_FFT.cpp PROPERTIES LANGUAGE CUDA)
+		set_source_files_properties(VkFFT_TestSuite.cpp PROPERTIES LANGUAGE CUDA)
 endif()
-	set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 35 60 70 75 80 86)
+	set_property(TARGET ${PROJECT_NAME} PROPERTY CUDA_ARCHITECTURES 60 70 75 80 86)
 	target_compile_options(${PROJECT_NAME} PUBLIC "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:
 	-std=c++11
 	-DVKFFT_BACKEND=${VKFFT_BACKEND}
-	-gencode arch=compute_35,code=compute_35
 	-gencode arch=compute_60,code=compute_60
 	-gencode arch=compute_70,code=compute_70 
 	-gencode arch=compute_75,code=compute_75 
@@ -124,6 +123,12 @@ elseif(${VKFFT_BACKEND} EQUAL 4)
 		NO_DEFAULT_PATH
 	  )
 	target_include_directories(${PROJECT_NAME} PUBLIC ${LevelZero_INCLUDES})
+elseif(${VKFFT_BACKEND} EQUAL 5)
+	add_compile_options(-WMTL_IGNORE_WARNINGS)
+	find_library(FOUNDATION_LIB Foundation REQUIRED)
+	find_library(QUARTZ_CORE_LIB QuartzCore REQUIRED)	
+	find_library(METAL_LIB Metal REQUIRED)
+	target_include_directories(${PROJECT_NAME} PUBLIC "metal-cpp/")
 endif()
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC -DVK_API_VERSION=11)#10 - Vulkan 1.0, 11 - Vulkan 1.1, 12 - Vulkan 1.2 
@@ -132,16 +137,17 @@ if(VkFFT_use_FP128_Bluestein_RaderFFT)
 endif()  
 if(${VKFFT_BACKEND} EQUAL 0)
 	FetchContent_Declare(
-		glslang-master
+		glslang-main
+		GIT_TAG "origin/main"
 		GIT_REPOSITORY https://github.com/KhronosGroup/glslang
-		SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glslang-master
+		SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/glslang-main
 	)
-	FetchContent_GetProperties(glslang-master)
-	if(NOT glslang-master_POPULATED)
-		FetchContent_Populate(glslang-master)
+	FetchContent_GetProperties(glslang-main)
+	if(NOT glslang-main_POPULATED)
+		FetchContent_Populate(glslang-main)
 	endif()
-	target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glslang-master/glslang/Include/)
-	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/glslang-master)
+	target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/glslang-main/glslang/Include/)
+	add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/glslang-main)
 endif()
 
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/vkFFT/)
@@ -157,6 +163,7 @@ if(${VKFFT_BACKEND} EQUAL 0)
 	target_link_libraries(${PROJECT_NAME} PUBLIC SPIRV glslang Vulkan::Vulkan VkFFT half)
 elseif(${VKFFT_BACKEND} EQUAL 1)
 	find_library(CUDA_NVRTC_LIB libnvrtc nvrtc HINTS "${CUDA_TOOLKIT_ROOT_DIR}/lib64" "${LIBNVRTC_LIBRARY_DIR}" "${CUDA_TOOLKIT_ROOT_DIR}/lib/x64" /usr/lib64 /usr/local/cuda/lib64)
+	add_definitions(-DCUDA_TOOLKIT_ROOT_DIR="${CUDA_TOOLKIT_ROOT_DIR}")
 	target_link_libraries(${PROJECT_NAME} PUBLIC ${CUDA_LIBRARIES} cuda ${CUDA_NVRTC_LIB} VkFFT half)
 elseif(${VKFFT_BACKEND} EQUAL 2)
 	target_link_libraries(${PROJECT_NAME} PUBLIC hip::host VkFFT half)
@@ -164,6 +171,8 @@ elseif(${VKFFT_BACKEND} EQUAL 3)
 	target_link_libraries(${PROJECT_NAME} PUBLIC OpenCL::OpenCL VkFFT half)
 elseif(${VKFFT_BACKEND} EQUAL 4)
 	target_link_libraries(${PROJECT_NAME} PUBLIC ze_loader VkFFT half)
+elseif(${VKFFT_BACKEND} EQUAL 5)
+	target_link_libraries(${PROJECT_NAME} PUBLIC ${FOUNDATION_LIB} ${QUARTZ_CORE_LIB} ${METAL_LIB} VkFFT half)
 endif()
 
 if(build_VkFFT_FFTW_precision OR VkFFT_use_FP128_Bluestein_RaderFFT)
@@ -234,11 +243,10 @@ if(build_VkFFT_cuFFT_benchmark)
 		benchmark_scripts/cuFFT_scripts/src/sample_1001_benchmark_cuFFT_double_2_4096.cu
 		benchmark_scripts/cuFFT_scripts/src/sample_1003_benchmark_cuFFT_single_3d_2_512.cu)
 	endif()
-	set_property(TARGET cuFFT_scripts PROPERTY CUDA_ARCHITECTURES 35 60 70 75 80 86)
+	set_property(TARGET cuFFT_scripts PROPERTY CUDA_ARCHITECTURES 60 70 75 80 86)
 	CUDA_ADD_CUFFT_TO_TARGET(cuFFT_scripts)
 	target_compile_options(cuFFT_scripts PRIVATE "$<$<COMPILE_LANGUAGE:CUDA>:SHELL:
 	-std=c++11
-	-gencode arch=compute_35,code=compute_35
 	-gencode arch=compute_60,code=compute_60
 	-gencode arch=compute_70,code=compute_70 
 	-gencode arch=compute_75,code=compute_75 
@@ -287,5 +295,5 @@ if(build_VkFFT_rocFFT_benchmark)
 	target_link_libraries(rocFFT_scripts PRIVATE hip::host hip::hipfft)
 	target_link_libraries(${PROJECT_NAME} PUBLIC rocFFT_scripts)
 endif()
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/vkFFT/vkFFT.h" DESTINATION include)
+install(DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/vkFFT/" DESTINATION include)
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
