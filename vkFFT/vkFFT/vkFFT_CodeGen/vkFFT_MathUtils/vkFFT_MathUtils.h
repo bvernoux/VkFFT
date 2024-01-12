@@ -74,6 +74,77 @@ static inline void PfCopyContainer(VkFFTSpecializationConstantsLayout* sc, PfCon
 	sc->res = VKFFT_ERROR_MATH_FAILED;
 	return;
 }
+static inline void PfSwapContainers(VkFFTSpecializationConstantsLayout* sc, PfContainer* out, PfContainer* in) {
+	if (sc->res != VKFFT_SUCCESS) return;
+	if ((((out->type % 100) / 10) == 3) && ((out->type % 10) == 2)) {
+		PfSwapContainers(sc, &out->data.dd[0], &in->data.dd[0]);
+		PfSwapContainers(sc, &out->data.dd[1], &in->data.dd[1]);
+	}
+	if (out->type > 100) {
+		if (in->type > 100) {
+			if (out->type == in->type) {
+				int len = in->size;
+				in->size = out->size;
+				out->size = len;
+
+				char* temp = in->name;
+				in->name = out->name;
+				out->name = temp;
+
+				switch (out->type % 10) {
+				case 3:
+					PfSwapContainers(sc, &out->data.c[0], &in->data.c[0]);
+					PfSwapContainers(sc, &out->data.c[1], &in->data.c[1]);
+					return;
+				}
+				return;
+			}
+		}
+		else {
+		}
+	}
+	else {
+		if (in->type > 100) {
+		}
+		else {
+			if (out->type == in->type) {
+				switch (out->type % 10) {
+				case 1:
+				{
+					pfINT temp;
+					temp = in->data.i;
+					in->data.i = out->data.i;
+					out->data.i = temp;
+					return;
+				}
+				case 2:
+				{
+					pfLD temp;
+					temp = in->data.d;
+					in->data.d = out->data.d;
+					out->data.d = temp;
+					return;
+				}
+				case 3:
+				{
+					pfLD temp;
+					temp = in->data.c[0].data.d;
+					in->data.c[0].data.d = out->data.c[0].data.d;
+					out->data.c[0].data.d = temp;
+
+					temp = in->data.c[1].data.d;
+					in->data.c[1].data.d = out->data.c[1].data.d;
+					out->data.c[1].data.d = temp;
+					return;
+				}
+				}
+			}
+		}
+	}
+	sc->res = VKFFT_ERROR_MATH_FAILED;
+	return;
+}
+
 static inline void PfAllocateContainerFlexible(VkFFTSpecializationConstantsLayout* sc, PfContainer* container, int size) {
 	if (sc->res != VKFFT_SUCCESS) return;
 	if (container->size != 0) return;
@@ -259,11 +330,14 @@ static inline void PfAppendConversionStart(VkFFTSpecializationConstantsLayout* s
 	case 2:
 		switch ((out->type % 100) / 10) {
 		case 0:
-#if((VKFFT_BACKEND==0)||(VKFFT_BACKEND==5))
-			sc->tempLen = sprintf(sc->tempStr, "half(");
+#if(VKFFT_BACKEND==0)
+			sc->tempLen = sprintf(sc->tempStr, "float16_t(");
 			PfAppendLine(sc);
 #elif((VKFFT_BACKEND==1)||(VKFFT_BACKEND==2)||(VKFFT_BACKEND==3)||(VKFFT_BACKEND==4))
 			sc->tempLen = sprintf(sc->tempStr, "(half)");
+			PfAppendLine(sc);
+#elif(VKFFT_BACKEND==5)
+			sc->tempLen = sprintf(sc->tempStr, "half(");
 			PfAppendLine(sc);
 #endif
 			return;
@@ -288,12 +362,12 @@ static inline void PfAppendConversionStart(VkFFTSpecializationConstantsLayout* s
 #endif
 				return;
 			case 3:
-				sc->tempLen = sprintf(sc->tempStr, "conv_quad_to_double(");
+				sc->tempLen = sprintf(sc->tempStr, "conv_pf_quad_to_double(");
 				PfAppendLine(sc);
 				return;
 			}
 		case 3:
-			sc->tempLen = sprintf(sc->tempStr, "conv_double_to_quad(");
+			sc->tempLen = sprintf(sc->tempStr, "conv_double_to_pf_quad(");
 			PfAppendLine(sc);
 			return;
 		}
@@ -329,12 +403,12 @@ static inline void PfAppendConversionStart(VkFFTSpecializationConstantsLayout* s
 #endif
 			return;
 			case 3:
-				sc->tempLen = sprintf(sc->tempStr, "conv_quad2_to_double2(");
+				sc->tempLen = sprintf(sc->tempStr, "conv_pf_quad2_to_double2(");
 				PfAppendLine(sc);
 				return;
 			}
 		case 3:
-			sc->tempLen = sprintf(sc->tempStr, "conv_double2_to_quad2(");
+			sc->tempLen = sprintf(sc->tempStr, "conv_double2_to_pf_quad2(");
 			PfAppendLine(sc);
 			return;
 		}
@@ -439,7 +513,7 @@ static inline void PfSetContainerName(VkFFTSpecializationConstantsLayout* sc, Pf
 		if(out->type < 200){
 			if ((((out->type % 100) / 10) == 3) && ((out->type % 10) == 2)){
 				sprintf(out->data.dd[0].name, "%s.x", name);
-				sprintf(out->data.dd[1].name, "%s.x", name);
+				sprintf(out->data.dd[1].name, "%s.y", name);
 			}else{
 				if (((out->type % 10) == 3) && (out->type > 100)) {
 					sprintf(out->data.c[0].name, "%s.x", name);
@@ -662,17 +736,43 @@ static inline void PfSetToZero(VkFFTSpecializationConstantsLayout* sc, PfContain
 }
 static inline void PfSetToZeroShared(VkFFTSpecializationConstantsLayout* sc, PfContainer* sdataID) {
 	if (sc->res != VKFFT_SUCCESS) return;
-	if ((((sc->sdataStruct.type % 100) / 10) == 3) && ((sc->sdataStruct.type % 10) > 1)) {
+	if(sc->storeSharedComplexComponentsSeparately){
+		if ((((sc->sdataStruct.type % 100) / 10) == 3) && ((sc->sdataStruct.type % 10) > 1)) {
+			if (sdataID->type > 100) {
+			switch (sdataID->type % 10) {
+			case 1: 
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%s].x = 0;\n\
+sdata[%s].y = 0;\n", sdataID->name, sdataID->name);
+					PfAppendLine(sc);
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%s + %" PRIi64 "].x = 0;\n\
+sdata[%s + %" PRIi64 "].y = 0;\n", sdataID->name, sc->offsetImaginaryShared.data.i, sdataID->name, sc->offsetImaginaryShared.data.i);
+					PfAppendLine(sc);
+					return;
+				}
+			}
+			else {
+				switch (sdataID->type % 10) {
+				case 1:
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%" PRIi64 "].x = 0;\n\
+sdata[%" PRIi64 "].y = 0;\n", sdataID->data.i, sdataID->data.i);
+					PfAppendLine(sc);
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%" PRIi64 "].x = 0;\n\
+sdata[%" PRIi64 "].y = 0;\n", sdataID->data.i + sc->offsetImaginaryShared.data.i, sdataID->data.i + sc->offsetImaginaryShared.data.i);
+					PfAppendLine(sc);
+					return;
+				}
+			}
+		}
 		if (sdataID->type > 100) {
-		switch (sdataID->type % 10) {
-		case 1: 
+			switch (sdataID->type % 10) {
+			case 1: 
 				sc->tempLen = sprintf(sc->tempStr, "\
-sdata[%s].x.x = 0;\n\
-sdata[%s].x.y = 0;\n", sdataID->name, sdataID->name);
-				PfAppendLine(sc);
-				sc->tempLen = sprintf(sc->tempStr, "\
-sdata[%s].y.x = 0;\n\
-sdata[%s].y.y = 0;\n", sdataID->name, sdataID->name);
+sdata[%s] = 0;\n\
+sdata[%s + %" PRIi64 "] = 0;\n", sdataID->name, sdataID->name, sc->offsetImaginaryShared.data.i);
 				PfAppendLine(sc);
 				return;
 			}
@@ -681,35 +781,62 @@ sdata[%s].y.y = 0;\n", sdataID->name, sdataID->name);
 			switch (sdataID->type % 10) {
 			case 1:
 				sc->tempLen = sprintf(sc->tempStr, "\
-sdata[%" PRIi64 "].x.x = 0;\n\
-sdata[%" PRIi64 "].x.y = 0;\n", sdataID->data.i, sdataID->data.i);
-				PfAppendLine(sc);
-				sc->tempLen = sprintf(sc->tempStr, "\
-sdata[%" PRIi64 "].y.x = 0;\n\
-sdata[%" PRIi64 "].y.y = 0;\n", sdataID->data.i, sdataID->data.i);
+sdata[%" PRIi64 "] = 0;\n\
+sdata[%" PRIi64 "] = 0;\n", sdataID->data.i, sdataID->data.i + sc->offsetImaginaryShared.data.i);
 				PfAppendLine(sc);
 				return;
 			}
 		}
-	}
-	if (sdataID->type > 100) {
-		switch (sdataID->type % 10) {
-		case 1: 
-			sc->tempLen = sprintf(sc->tempStr, "\
+	}else{
+		if ((((sc->sdataStruct.type % 100) / 10) == 3) && ((sc->sdataStruct.type % 10) > 1)) {
+			if (sdataID->type > 100) {
+			switch (sdataID->type % 10) {
+			case 1: 
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%s].x.x = 0;\n\
+sdata[%s].x.y = 0;\n", sdataID->name, sdataID->name);
+					PfAppendLine(sc);
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%s].y.x = 0;\n\
+sdata[%s].y.y = 0;\n", sdataID->name, sdataID->name);
+					PfAppendLine(sc);
+					return;
+				}
+			}
+			else {
+				switch (sdataID->type % 10) {
+				case 1:
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%" PRIi64 "].x.x = 0;\n\
+sdata[%" PRIi64 "].x.y = 0;\n", sdataID->data.i, sdataID->data.i);
+					PfAppendLine(sc);
+					sc->tempLen = sprintf(sc->tempStr, "\
+sdata[%" PRIi64 "].y.x = 0;\n\
+sdata[%" PRIi64 "].y.y = 0;\n", sdataID->data.i, sdataID->data.i);
+					PfAppendLine(sc);
+					return;
+				}
+			}
+		}
+		if (sdataID->type > 100) {
+			switch (sdataID->type % 10) {
+			case 1: 
+				sc->tempLen = sprintf(sc->tempStr, "\
 sdata[%s].x = 0;\n\
 sdata[%s].y = 0;\n", sdataID->name, sdataID->name);
-			PfAppendLine(sc);
-			return;
+				PfAppendLine(sc);
+				return;
+			}
 		}
-	}
-	else {
-		switch (sdataID->type % 10) {
-		case 1:
-			sc->tempLen = sprintf(sc->tempStr, "\
+		else {
+			switch (sdataID->type % 10) {
+			case 1:
+				sc->tempLen = sprintf(sc->tempStr, "\
 sdata[%" PRIi64 "].x = 0;\n\
 sdata[%" PRIi64 "].y = 0;\n", sdataID->data.i, sdataID->data.i);
-			PfAppendLine(sc);
-			return;
+				PfAppendLine(sc);
+				return;
+			}
 		}
 	}
 	sc->res = VKFFT_ERROR_MATH_FAILED;
@@ -3284,7 +3411,7 @@ static inline void PfRsqrt(VkFFTSpecializationConstantsLayout* sc, PfContainer* 
 				switch (in_1->type % 10) {
 				case 2:
 					sc->tempLen = sprintf(sc->tempStr, "\
-%s = %.17Le;\n", out->name, (long double)(1.0l / pfsqrt(in_1->data.d)));
+%s = %.17Le;\n", out->name, (long double)(pfFPinit("1.0") / pfsqrt(in_1->data.d)));
 					PfAppendLine(sc);
 					return;
 				}
@@ -3299,7 +3426,7 @@ static inline void PfRsqrt(VkFFTSpecializationConstantsLayout* sc, PfContainer* 
 			else {
 				switch (in_1->type % 10) {
 				case 2:
-					out->data.d = 1.0l / pfsqrt(in_1->data.d);
+					out->data.d = pfFPinit("1.0") / pfsqrt(in_1->data.d);
 					return;
 				}
 			}
@@ -3410,6 +3537,82 @@ if (%d) {\n", (left->data.d == right->data.d));
 	sc->res = VKFFT_ERROR_MATH_FAILED;
 	return;
 }
+static inline void PfIf_neq_start(VkFFTSpecializationConstantsLayout* sc, PfContainer* left, PfContainer* right) {
+	if (sc->res != VKFFT_SUCCESS) return;
+	if (left->type > 100) {
+		if (right->type > 100) {
+			sc->tempLen = sprintf(sc->tempStr, "\
+if (%s != %s) {\n", left->name, right->name);
+			PfAppendLine(sc);
+			return;
+		}
+		else {
+			switch (right->type % 10) {
+			case 1:
+				sc->tempLen = sprintf(sc->tempStr, "\
+if (%s != %" PRIi64 ") {\n", left->name, right->data.i);
+				PfAppendLine(sc);
+				return;
+			case 2:
+				sc->tempLen = sprintf(sc->tempStr, "\
+if (%s != %.17Le) {\n", left->name, (long double)right->data.d);
+				PfAppendLine(sc);
+				return;
+			}
+		}
+	}
+	else {
+		if (right->type > 100) {
+			switch (left->type % 10) {
+			case 1:
+				sc->tempLen = sprintf(sc->tempStr, "\
+if (%" PRIi64 " != %s) {\n", left->data.i, right->name);
+				PfAppendLine(sc);
+				return;
+			case 2:
+				sc->tempLen = sprintf(sc->tempStr, "\
+if (%.17Le != %s) {\n", (long double)left->data.d, right->name);
+				PfAppendLine(sc);
+				return;
+			}
+		}
+		else {
+			switch (left->type % 10) {
+			case 1:
+				switch (right->type % 10) {
+				case 1:
+					sc->tempLen = sprintf(sc->tempStr, "\
+if (%d) {\n", (left->data.i != right->data.i));
+					PfAppendLine(sc);
+					return;
+				case 2:
+					sc->tempLen = sprintf(sc->tempStr, "\
+if (%d) {\n", (left->data.i != right->data.d));
+					PfAppendLine(sc);
+					return;
+				}
+				break;
+			case 2:
+				switch (right->type % 10) {
+				case 1:
+					sc->tempLen = sprintf(sc->tempStr, "\
+if (%d) {\n", (left->data.d != right->data.i));
+					PfAppendLine(sc);
+					return;
+				case 2:
+					sc->tempLen = sprintf(sc->tempStr, "\
+if (%d) {\n", (left->data.d != right->data.d));
+					PfAppendLine(sc);
+					return;
+				}
+				return;
+			}
+		}
+	}
+	sc->res = VKFFT_ERROR_MATH_FAILED;
+	return;
+}
+
 static inline void PfIf_lt_start(VkFFTSpecializationConstantsLayout* sc, PfContainer* left, PfContainer* right) {
 	if (sc->res != VKFFT_SUCCESS) return;
 	if (left->type > 100) {

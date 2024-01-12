@@ -33,7 +33,7 @@ void launch_precision_cuFFT_half(void* inputC, void* output_cuFFT, int device_id
 	cufftResult res = cufftCreate(&planHalf);
 	size_t ws = 0;
 	long long local_dims[3];
-	switch (dims[3]) {
+	switch (dims[4]) {
 	case 1:
 		local_dims[0] = (long long)dims[0];
 		local_dims[1] = (long long)dims[1];
@@ -51,7 +51,7 @@ void launch_precision_cuFFT_half(void* inputC, void* output_cuFFT, int device_id
 		break;
 	}
 	res = cufftXtMakePlanMany(
-		planHalf, dims[3], local_dims, NULL, 1, 1, CUDA_C_16F,
+		planHalf, dims[4], local_dims, NULL, 1, 1, CUDA_C_16F,
 		NULL, 1, 1, CUDA_C_16F, 1, &ws, CUDA_C_16F);
 
 	for (int i = 0; i < 1; i++) {

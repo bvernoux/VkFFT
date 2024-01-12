@@ -34,40 +34,40 @@ static inline VkFFTResult initMemoryParametersAPI(VkFFTApplication* app, VkFFTSp
 	PfAllocateContainerFlexible(sc, &sc->floatLiteral, 50);
 	sc->doubleLiteral.type = 320;
 	PfAllocateContainerFlexible(sc, &sc->doubleLiteral, 50);
-	sc->halfDef.type = 300;
+	sc->halfDef.type = 302;
 	PfAllocateContainerFlexible(sc, &sc->halfDef, 50);
-	sc->floatDef.type = 310;
+	sc->floatDef.type = 312;
 	PfAllocateContainerFlexible(sc, &sc->floatDef, 50);
-	sc->doubleDef.type = 320;
+	sc->doubleDef.type = 322;
 	PfAllocateContainerFlexible(sc, &sc->doubleDef, 50);
-	sc->quadDef.type = 320;
+	sc->quadDef.type = 322;
 	PfAllocateContainerFlexible(sc, &sc->quadDef, 50);
-	sc->half2Def.type = 300;
+	sc->half2Def.type = 303;
 	PfAllocateContainerFlexible(sc, &sc->half2Def, 50);
-	sc->float2Def.type = 310;
+	sc->float2Def.type = 313;
 	PfAllocateContainerFlexible(sc, &sc->float2Def, 50);
-	sc->double2Def.type = 320;
+	sc->double2Def.type = 323;
 	PfAllocateContainerFlexible(sc, &sc->double2Def, 50);
-	sc->quad2Def.type = 320;
+	sc->quad2Def.type = 323;
 	PfAllocateContainerFlexible(sc, &sc->quad2Def, 50);
 	
-	sc->uintDef.type = 300;
+	sc->uintDef.type = 301;
 	PfAllocateContainerFlexible(sc, &sc->uintDef, 50);
-	sc->intDef.type = 310;
+	sc->intDef.type = 311;
 	PfAllocateContainerFlexible(sc, &sc->intDef, 50);
-	sc->uint64Def.type = 320;
+	sc->uint64Def.type = 321;
 	PfAllocateContainerFlexible(sc, &sc->uint64Def, 50);
-	sc->int64Def.type = 330;
+	sc->int64Def.type = 331;
 	PfAllocateContainerFlexible(sc, &sc->int64Def, 50);
 	
 #if(VKFFT_BACKEND==0)
 	sprintf(sc->halfLiteral.name, "h");
 	sprintf(sc->floatLiteral.name, "f");
 	sprintf(sc->doubleLiteral.name, "LF");
-	sprintf(sc->halfDef.name, "half");
+	sprintf(sc->halfDef.name, "float16_t");
 	sprintf(sc->floatDef.name, "float");
 	sprintf(sc->doubleDef.name, "double");
-	sprintf(sc->quadDef.name, "pf_quad");
+	sprintf(sc->quadDef.name, "dvec2");
 	sprintf(sc->half2Def.name, "f16vec2");
 	sprintf(sc->float2Def.name, "vec2");
 	sprintf(sc->double2Def.name, "dvec2");
@@ -84,7 +84,7 @@ static inline VkFFTResult initMemoryParametersAPI(VkFFTApplication* app, VkFFTSp
 	sprintf(sc->halfDef.name, "half");
 	sprintf(sc->floatDef.name, "float");
 	sprintf(sc->doubleDef.name, "double");
-	sprintf(sc->quadDef.name, "pf_quad");
+	sprintf(sc->quadDef.name, "double2");
 	sprintf(sc->half2Def.name, "half2");
 	sprintf(sc->float2Def.name, "float2");
 	sprintf(sc->double2Def.name, "double2");
@@ -101,7 +101,7 @@ static inline VkFFTResult initMemoryParametersAPI(VkFFTApplication* app, VkFFTSp
 	sprintf(sc->halfDef.name, "half");
 	sprintf(sc->floatDef.name, "float");
 	sprintf(sc->doubleDef.name, "double");
-	sprintf(sc->quadDef.name, "pf_quad");
+	sprintf(sc->quadDef.name, "double2");
 	sprintf(sc->half2Def.name, "half2");
 	sprintf(sc->float2Def.name, "float2");
 	sprintf(sc->double2Def.name, "double2");
@@ -117,7 +117,7 @@ static inline VkFFTResult initMemoryParametersAPI(VkFFTApplication* app, VkFFTSp
 	sprintf(sc->halfDef.name, "half");
 	sprintf(sc->floatDef.name, "float");
 	sprintf(sc->doubleDef.name, "double");
-	sprintf(sc->quadDef.name, "struct pf_quad");
+	sprintf(sc->quadDef.name, "double2");
 	sprintf(sc->half2Def.name, "half2");
 	sprintf(sc->float2Def.name, "float2");
 	sprintf(sc->double2Def.name, "double2");
@@ -133,7 +133,7 @@ static inline VkFFTResult initMemoryParametersAPI(VkFFTApplication* app, VkFFTSp
 	sprintf(sc->halfDef.name, "half");
 	sprintf(sc->floatDef.name, "float");
 	sprintf(sc->doubleDef.name, "double");
-	sprintf(sc->quadDef.name, "pf_quad");
+	sprintf(sc->quadDef.name, "double2");
 	sprintf(sc->half2Def.name, "half2");
 	sprintf(sc->float2Def.name, "float2");
 	sprintf(sc->double2Def.name, "double2");
@@ -204,6 +204,18 @@ static inline VkFFTResult initMemoryParametersAPI(VkFFTApplication* app, VkFFTSp
 		sc->vecTypeKernelMemoryCode = 33;
 		sc->vecTypeInputMemoryCode = 33;
 		sc->vecTypeOutputMemoryCode = 33;
+	}
+	else if (app->configuration.quadDoubleDoublePrecisionDoubleMemory) {
+		sc->floatTypeCode = 32;
+		sc->vecTypeCode = 33;
+
+		sc->floatTypeKernelMemoryCode = 22;
+		sc->floatTypeInputMemoryCode = 22;
+		sc->floatTypeOutputMemoryCode = 22;
+
+		sc->vecTypeKernelMemoryCode = 23;
+		sc->vecTypeInputMemoryCode = 23;
+		sc->vecTypeOutputMemoryCode = 23;
 	}
 	else {
 		if (app->configuration.doublePrecisionFloatMemory) {

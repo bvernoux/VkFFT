@@ -26,7 +26,7 @@ else()
 endif()
 
 option(build_VkFFT_FFTW_precision "Build VkFFT FFTW precision comparison" OFF)
-option(VkFFT_use_FP128_Bluestein_RaderFFT "Use FP128 for Bluestein and Rader FFT kernel calculations. Currently requires FP128 FFT library, like FFTWl" OFF)
+option(VkFFT_use_FP128_Bluestein_RaderFFT "Use LD for Bluestein and Rader FFT kernel calculations. Currently requires LD FFT library, like FFTWl, will be reworked" OFF)
 option(VkFFT_use_FP128_double_double "Build VkFFT quad double-double" OFF)
 
 if (MSVC)
@@ -135,7 +135,7 @@ elseif(${VKFFT_BACKEND} EQUAL 4)
 		LevelZero_INCLUDES
 		NAMES "ze_api.h"
 		PATHS ${LevelZero_INCLUDE_DIR}
-		PATH_SUFFIXES "include" 
+		PATH_SUFFIXES "include" "level_zero"
 		NO_DEFAULT_PATH
 	  )
 	target_include_directories(${PROJECT_NAME} PUBLIC ${LevelZero_INCLUDES})

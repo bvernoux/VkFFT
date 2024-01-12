@@ -343,7 +343,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 #else
 		sprintf(opts[0], "--gpu-architecture=compute_%" PRIu64 "%" PRIu64 "", app->configuration.computeCapabilityMajor, app->configuration.computeCapabilityMinor);
 #endif
-		if (app->configuration.quadDoubleDoublePrecision){
+		if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory){
 			opts[1] = (char*)malloc(sizeof(char) * 50);
 			if (!opts[1]) {
 				free(code0);
@@ -361,7 +361,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			(const char* const*)opts); // options
 
 		free(opts[0]);
-		if (app->configuration.quadDoubleDoublePrecision)
+		if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 			free(opts[1]);
 
 		if (result != NVRTC_SUCCESS) {
@@ -472,7 +472,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			return VKFFT_ERROR_FAILED_TO_SET_DYNAMIC_SHARED_MEMORY;
 		}
 	}
-	if (axis->pushConstants.structSize) {
+	/*if (axis->pushConstants.structSize) {
 		size_t size = axis->pushConstants.structSize;
 		result2 = cuModuleGetGlobal(&axis->consts_addr, &size, axis->VkFFTModule, "consts");
 		if (result2 != CUDA_SUCCESS) {
@@ -484,7 +484,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			deleteVkFFT(app);
 			return VKFFT_ERROR_FAILED_TO_MODULE_GET_GLOBAL;
 		}
-	}
+	}*/
 	if (!app->configuration.saveApplicationToString) {
 		free(code);
 		code = 0;
@@ -521,7 +521,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			deleteVkFFT(app);
 			return VKFFT_ERROR_FAILED_TO_CREATE_PROGRAM;
 		}
-		if (axis->pushConstants.structSize) {
+		/*if (axis->pushConstants.structSize) {
 			result = hiprtcAddNameExpression(prog, "&consts");
 			if (result != HIPRTC_SUCCESS) {
 				printf("hiprtcAddNameExpression error: %s\n", hiprtcGetErrorString(result));
@@ -530,10 +530,10 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 				deleteVkFFT(app);
 				return VKFFT_ERROR_FAILED_TO_ADD_NAME_EXPRESSION;
 			}
-		}
+		}*/
 		int numOpts = 0;
 		char* opts[5];
-		if (app->configuration.quadDoubleDoublePrecision){
+		if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory){
 			opts[0] = (char*)malloc(sizeof(char) * 50);
 			if (!opts[0]) {
 				free(code0);
@@ -549,7 +549,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			numOpts,     // numOptions
 			(const char**)opts); // options
 
-		if (app->configuration.quadDoubleDoublePrecision)
+		if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 			free(opts[0]);	
 		if (result != HIPRTC_SUCCESS) {
 			printf("hiprtcCompileProgram error: %s\n", hiprtcGetErrorString(result));
@@ -646,7 +646,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			return VKFFT_ERROR_FAILED_TO_SET_DYNAMIC_SHARED_MEMORY;
 		}
 	}
-	if (axis->pushConstants.structSize) {
+	/*if (axis->pushConstants.structSize) {
 		size_t size = axis->pushConstants.structSize;
 		result2 = hipModuleGetGlobal(&axis->consts_addr, &size, axis->VkFFTModule, "consts");
 		if (result2 != hipSuccess) {
@@ -658,7 +658,7 @@ static inline VkFFTResult VkFFT_CompileKernel(VkFFTApplication* app, VkFFTAxis* 
 			deleteVkFFT(app);
 			return VKFFT_ERROR_FAILED_TO_MODULE_GET_GLOBAL;
 		}
-	}
+	}*/
 	if (!app->configuration.saveApplicationToString) {
 		free(code);
 		code = 0;

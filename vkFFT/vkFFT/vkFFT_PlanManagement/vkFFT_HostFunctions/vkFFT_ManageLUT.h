@@ -62,9 +62,6 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					maxStageSum += dimMult * 5;
 					break;
 				case 7:
-					if (app->configuration.quadDoubleDoublePrecision)
-						maxStageSum += dimMult * 7;
-					else 
 						maxStageSum += dimMult * 6;
 					break;
 				case 8:
@@ -77,7 +74,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					maxStageSum += dimMult * 9;
 					break;
 				case 11:
-					if (app->configuration.quadDoubleDoublePrecision)
+					if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 						maxStageSum += dimMult * 11;
 					else 
 						maxStageSum += dimMult * 10;
@@ -86,7 +83,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					maxStageSum += dimMult * 11;
 					break;
 				case 13:
-					if (app->configuration.quadDoubleDoublePrecision)
+					if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 						maxStageSum += dimMult * 13;
 					else 
 						maxStageSum += dimMult * 12;
@@ -135,9 +132,6 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							maxStageSum += dimMult * 5;
 							break;
 						case 7:
-							if (app->configuration.quadDoubleDoublePrecision)
-								maxStageSum += dimMult * 7;
-							else 
 								maxStageSum += dimMult * 6;
 							break;
 						case 8:
@@ -150,7 +144,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							maxStageSum += dimMult * 9;
 							break;
 						case 11:
-							if (app->configuration.quadDoubleDoublePrecision)
+							if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 								maxStageSum += dimMult * 11;
 							else 
 								maxStageSum += dimMult * 10;
@@ -159,7 +153,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							maxStageSum += dimMult * 11;
 							break;
 						case 13:
-							if (app->configuration.quadDoubleDoublePrecision)
+							if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 								maxStageSum += dimMult * 13;
 							else 
 								maxStageSum += dimMult * 12;
@@ -211,9 +205,6 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							maxStageSum += dimMult * 5;
 							break;
 						case 7:
-							if (app->configuration.quadDoubleDoublePrecision)
-								maxStageSum += dimMult * 7;
-							else 
 								maxStageSum += dimMult * 6;
 							break;
 						case 8:
@@ -226,7 +217,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							maxStageSum += dimMult * 9;
 							break;
 						case 11:
-							if (app->configuration.quadDoubleDoublePrecision)
+							if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 								maxStageSum += dimMult * 11;
 							else 
 								maxStageSum += dimMult * 10;
@@ -235,7 +226,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							maxStageSum += dimMult * 11;
 							break;
 						case 13:
-							if (app->configuration.quadDoubleDoublePrecision)
+							if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory)
 								maxStageSum += dimMult * 13;
 							else 
 								maxStageSum += dimMult * 12;
@@ -263,56 +254,43 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 				dimMult = 1;
 			}
 		}
-		if (app->configuration.quadDoubleDoublePrecision) {
-			pfLD double_PI = pfFPinit("3.14159265358979323846264338327950288419716939937510");
-			if (axis->specializationConstants.axis_upload_id > 0) {
-				if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
-					axis->specializationConstants.startDCT3LUT.type = 31;
-					axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-					if (app->configuration.useLUT_4step == 1) axis->specializationConstants.startDCT3LUT.data.i += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
-					axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2)) * 4 * sizeof(double);
-				}
-				else {
-					if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
-						axis->specializationConstants.startDCT3LUT.type = 31;
-						axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-						if (app->configuration.useLUT_4step == 1) axis->specializationConstants.startDCT3LUT.data.i += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
-						axis->specializationConstants.startDCT4LUT.type = 31;
-						axis->specializationConstants.startDCT4LUT.data.i = (axis->specializationConstants.startDCT3LUT.data.i + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2));
-						axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2) + app->configuration.size[axis->specializationConstants.axis_id] / 2) * 4 * sizeof(double);
-					}
-					else
-						axis->bufferLUTSize = (maxStageSum) * 4 * sizeof(double);
-				}
-				if (app->configuration.useLUT_4step == 1) axis->bufferLUTSize += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i * 4 * sizeof(double);
-			}
-			else {
-				if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
-					axis->specializationConstants.startDCT3LUT.type = 31;
-					axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-					axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2)) * 4 * sizeof(double);
-				}
-				else {
-					if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
-						axis->specializationConstants.startDCT3LUT.type = 31;
-						axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-						axis->specializationConstants.startDCT4LUT.type = 31;
-						axis->specializationConstants.startDCT4LUT.data.i = (axis->specializationConstants.startDCT3LUT.data.i + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2));
-						axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2) + app->configuration.size[axis->specializationConstants.axis_id] / 2) * 4 * sizeof(double);
 
-					}
-					else
-						axis->bufferLUTSize = (maxStageSum) * 4 * sizeof(double);
+		pfUINT currentLUTPos = maxStageSum;
+		if ((app->configuration.useLUT_4step == 1) && (axis->specializationConstants.axis_upload_id > 0)) currentLUTPos += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
+		pfUINT disableReferenceLUT_DCT = 0;
+		if ((((((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 1)))) || (((((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 1))))) {
+			disableReferenceLUT_DCT = 1;
+		}
+		if ((((((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 1))) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) || (((((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 1))) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
+			axis->specializationConstants.startDCT3LUT.type = 31;
+			axis->specializationConstants.startDCT3LUT.data.i = currentLUTPos;
+			currentLUTPos += (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2);
+			disableReferenceLUT_DCT = 1;
+		}
+		if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
+			axis->specializationConstants.startDCT3LUT.type = 31;
+			axis->specializationConstants.startDCT3LUT.data.i = currentLUTPos;
+			currentLUTPos += (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2);
+			disableReferenceLUT_DCT = 1;
+		}
+		if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1))))) {
+			axis->specializationConstants.startDCT4LUT.type = 31;
+			axis->specializationConstants.startDCT4LUT.data.i = currentLUTPos;
+			currentLUTPos += app->configuration.size[axis->specializationConstants.axis_id] / 2;
+			disableReferenceLUT_DCT = 1;
+		}
+		if (axis->specializationConstants.useRader) {
+			for (pfUINT i = 0; i < axis->specializationConstants.numRaderPrimes; i++) {
+				if (!axis->specializationConstants.inline_rader_kernel) {
+					axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT = currentLUTPos;
+					currentLUTPos += (axis->specializationConstants.raderContainer[i].prime - 1);
 				}
 			}
-			if (axis->specializationConstants.useRader) {
-				for (pfUINT i = 0; i < axis->specializationConstants.numRaderPrimes; i++) {
-					if (!axis->specializationConstants.inline_rader_kernel) {
-						axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT = axis->bufferLUTSize / (4 * sizeof(double));
-						axis->bufferLUTSize += (axis->specializationConstants.raderContainer[i].prime - 1) * 4 * sizeof(double);
-					}
-				}
-			}
+		}
+
+		if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory) {
+			pfLD double_PI = pfFPinit("3.14159265358979323846264338327950288419716939937510");
+			axis->bufferLUTSize = currentLUTPos * 4 * sizeof(double);			
 			if (axis->bufferLUTSize == 0) axis->bufferLUTSize = 2 * sizeof(double);
 			double* tempLUT = (double*)malloc(axis->bufferLUTSize);
 			if (!tempLUT) {
@@ -472,13 +450,13 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 						}
 
 						if (!axis->specializationConstants.inline_rader_kernel) {
-							pfLD* raderFFTkernel = (pfLD*)axis->specializationConstants.raderContainer[i].raderFFTkernel;
+							double* raderFFTkernel = (double*)axis->specializationConstants.raderContainer[i].raderFFTkernel;
 							for (pfUINT j = 0; j < (axis->specializationConstants.raderContainer[i].prime - 1); j++) {//fix later
-								in.data.d = (raderFFTkernel[2 * j] / (pfLD)(axis->specializationConstants.raderContainer[i].prime - 1));
+								in.data.d = (((pfLD)raderFFTkernel[4 * j] + (pfLD)raderFFTkernel[4 * j + 1])/ (pfLD)(axis->specializationConstants.raderContainer[i].prime - 1));
 								PfConvToDoubleDouble(&axis->specializationConstants, &temp1, &in);
 								tempLUT[4 * (j + axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT)] = (double)temp1.data.dd[0].data.d;
 								tempLUT[4 * (j + axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT) + 1] = (double)temp1.data.dd[1].data.d;
-								in.data.d = (raderFFTkernel[2 * j + 1] / (pfLD)(axis->specializationConstants.raderContainer[i].prime - 1));
+								in.data.d = (((pfLD)raderFFTkernel[4 * j + 2] + (pfLD)raderFFTkernel[4 * j + 3])/ (pfLD)(axis->specializationConstants.raderContainer[i].prime - 1));
 								PfConvToDoubleDouble(&axis->specializationConstants, &temp1, &in);
 								tempLUT[4 * (j + axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT) + 2] = (double)temp1.data.dd[0].data.d;
 								tempLUT[4 * (j + axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT) + 3] = (double)temp1.data.dd[1].data.d;
@@ -502,7 +480,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					}
 				}
 			}
-			if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
+			if ((((((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 1))) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) || (((((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 1))) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2; j++) {
 					pfLD angle = (double_PI / pfFPinit("2.0") / (pfLD)(app->configuration.size[axis->specializationConstants.axis_id])) * j;
 					in.data.d = pfcos(angle);
@@ -515,7 +493,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					tempLUT[4 * axis->specializationConstants.startDCT3LUT.data.i + 4 * j + 3] = (double)temp1.data.dd[1].data.d;
 				}
 			}
-			if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
+			if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads - 1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2; j++) {
 					pfLD angle = (double_PI / pfFPinit("2.0") / (pfLD)(app->configuration.size[axis->specializationConstants.axis_id] / 2)) * j;
 					in.data.d = pfcos(angle);
@@ -527,6 +505,8 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					tempLUT[4 * axis->specializationConstants.startDCT3LUT.data.i + 4 * j + 2] = (double)temp1.data.dd[0].data.d;
 					tempLUT[4 * axis->specializationConstants.startDCT3LUT.data.i + 4 * j + 3] = (double)temp1.data.dd[1].data.d;
 				}
+			}
+			if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 2; j++) {
 					pfLD angle = (-double_PI / pfFPinit("8.0") / (pfLD)(app->configuration.size[axis->specializationConstants.axis_id] / 2)) * (2 * j + 1);
 					in.data.d = pfcos(angle);
@@ -541,7 +521,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 			}
 			PfDeallocateContainer(&axis->specializationConstants, &temp1);
 			axis->referenceLUT = 0;
-			if (axis->specializationConstants.reverseBluesteinMultiUpload == 1) {
+			if ((axis->specializationConstants.reverseBluesteinMultiUpload == 1) && (!disableReferenceLUT_DCT)) {
 				axis->bufferLUT = FFTPlan->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 				axis->bufferLUTDeviceMemory = FFTPlan->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -550,7 +530,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 				axis->referenceLUT = 1;
 			}
 			else {
-				if ((!inverse) && (!app->configuration.makeForwardPlanOnly)) {
+				if ((!inverse) && (!app->configuration.makeForwardPlanOnly) && (!disableReferenceLUT_DCT)) {
 					axis->bufferLUT = app->localFFTPlan_inverse->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 					axis->bufferLUTDeviceMemory = app->localFFTPlan_inverse->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -571,7 +551,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							}
 						}
 					}
-					if (checkRadixOrder && (axis->specializationConstants.axis_id >= 1) && (!((!axis->specializationConstants.reorderFourStep) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] > 1))) && ((axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[0][0].specializationConstants.fft_dim_full.data.i) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] == 1) && (axis->specializationConstants.fft_dim_full.data.i < axis->specializationConstants.maxSingleSizeStrided.data.i / axis->specializationConstants.registerBoost)) && ((!app->configuration.performDCT) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[0]))) {
+					if (checkRadixOrder && (!disableReferenceLUT_DCT) && (axis->specializationConstants.axis_id >= 1) && (!((!axis->specializationConstants.reorderFourStep) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] > 1))) && ((axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[0][0].specializationConstants.fft_dim_full.data.i) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] == 1) && (axis->specializationConstants.fft_dim_full.data.i < axis->specializationConstants.maxSingleSizeStrided.data.i / axis->specializationConstants.registerBoost)) && (((!axis->specializationConstants.performDCT) && (!axis->specializationConstants.performDST)) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[0]))) {
 						axis->bufferLUT = FFTPlan->axes[0][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 						axis->bufferLUTDeviceMemory = FFTPlan->axes[0][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -594,7 +574,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
                                         }
                                     }
                                 }
-                                if (checkRadixOrder && (axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[p][0].specializationConstants.fft_dim_full.data.i) && ((!app->configuration.performDCT) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[p]))) {
+                                if (checkRadixOrder && (!disableReferenceLUT_DCT) && (axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[p][0].specializationConstants.fft_dim_full.data.i) && (((!axis->specializationConstants.performDCT) && (!axis->specializationConstants.performDST)) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[p]))) {
                                     axis->bufferLUT = FFTPlan->axes[p][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
                                     axis->bufferLUTDeviceMemory = FFTPlan->axes[p][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -694,54 +674,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 		}
 		else if (app->configuration.doublePrecision || app->configuration.doublePrecisionFloatMemory) {
 			pfLD double_PI = pfFPinit("3.14159265358979323846264338327950288419716939937510");
-			if (axis->specializationConstants.axis_upload_id > 0) {
-				if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
-					axis->specializationConstants.startDCT3LUT.type = 31;
-					axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-					if (app->configuration.useLUT_4step == 1) axis->specializationConstants.startDCT3LUT.data.i += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
-					axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2)) * 2 * sizeof(double);
-				}
-				else {
-					if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
-						axis->specializationConstants.startDCT3LUT.type = 31;
-						axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-						if (app->configuration.useLUT_4step == 1) axis->specializationConstants.startDCT3LUT.data.i += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
-						axis->specializationConstants.startDCT4LUT.type = 31;
-						axis->specializationConstants.startDCT4LUT.data.i = (axis->specializationConstants.startDCT3LUT.data.i + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2));
-						axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2) + app->configuration.size[axis->specializationConstants.axis_id] / 2) * 2 * sizeof(double);
-					}
-					else
-						axis->bufferLUTSize = (maxStageSum) * 2 * sizeof(double);
-				}
-				if (app->configuration.useLUT_4step == 1) axis->bufferLUTSize += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i * 2 * sizeof(double);
-			}
-			else {
-				if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
-					axis->specializationConstants.startDCT3LUT.type = 31;
-					axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-					axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2)) * 2 * sizeof(double);
-				}
-				else {
-					if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
-						axis->specializationConstants.startDCT3LUT.type = 31;
-						axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-						axis->specializationConstants.startDCT4LUT.type = 31;
-						axis->specializationConstants.startDCT4LUT.data.i = (axis->specializationConstants.startDCT3LUT.data.i + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2));
-						axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2) + app->configuration.size[axis->specializationConstants.axis_id] / 2) * 2 * sizeof(double);
-
-					}
-					else
-						axis->bufferLUTSize = (maxStageSum) * 2 * sizeof(double);
-				}
-			}
-			if (axis->specializationConstants.useRader) {
-				for (pfUINT i = 0; i < axis->specializationConstants.numRaderPrimes; i++) {
-					if (!axis->specializationConstants.inline_rader_kernel) {
-						axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT = axis->bufferLUTSize / (2 * sizeof(double));
-						axis->bufferLUTSize += (axis->specializationConstants.raderContainer[i].prime - 1) * 2 * sizeof(double);
-					}
-				}
-			}
+			axis->bufferLUTSize = currentLUTPos * 2 * sizeof(double);
 			if (axis->bufferLUTSize == 0) axis->bufferLUTSize = sizeof(double);
 			double* tempLUT = (double*)malloc(axis->bufferLUTSize);
 			if (!tempLUT) {
@@ -864,19 +797,21 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					}
 				}
 			}
-			if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
+			if ((((((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 1))) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) || (((((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 1))) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2; j++) {
 					pfLD angle = (double_PI / 2.0 / (pfLD)(app->configuration.size[axis->specializationConstants.axis_id])) * j;
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j] = (double)pfcos(angle);
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j + 1] = (double)pfsin(angle);
 				}
 			}
-			if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
+			if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2; j++) {
 					pfLD angle = (double_PI / 2.0 / (pfLD)(app->configuration.size[axis->specializationConstants.axis_id] / 2)) * j;
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j] = (double)pfcos(angle);
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j + 1] = (double)pfsin(angle);
 				}
+			}
+			if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 2; j++) {
 					pfLD angle = (-double_PI / 8.0 / (pfLD)(app->configuration.size[axis->specializationConstants.axis_id] / 2)) * (2 * j + 1);
 					tempLUT[2 * axis->specializationConstants.startDCT4LUT.data.i + 2 * j] = (double)pfcos(angle);
@@ -884,7 +819,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 				}
 			}
 			axis->referenceLUT = 0;
-			if (axis->specializationConstants.reverseBluesteinMultiUpload == 1) {
+			if ((axis->specializationConstants.reverseBluesteinMultiUpload == 1) && (!disableReferenceLUT_DCT)) {
 				axis->bufferLUT = FFTPlan->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 				axis->bufferLUTDeviceMemory = FFTPlan->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -893,7 +828,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 				axis->referenceLUT = 1;
 			}
 			else {
-				if ((!inverse) && (!app->configuration.makeForwardPlanOnly)) {
+				if ((!inverse) && (!app->configuration.makeForwardPlanOnly) && (!disableReferenceLUT_DCT)) {
 					axis->bufferLUT = app->localFFTPlan_inverse->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 					axis->bufferLUTDeviceMemory = app->localFFTPlan_inverse->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -914,7 +849,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							}
 						}
 					}
-					if (checkRadixOrder && (axis->specializationConstants.axis_id >= 1) && (!((!axis->specializationConstants.reorderFourStep) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] > 1))) && ((axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[0][0].specializationConstants.fft_dim_full.data.i) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] == 1) && (axis->specializationConstants.fft_dim_full.data.i < axis->specializationConstants.maxSingleSizeStrided.data.i / axis->specializationConstants.registerBoost)) && ((!app->configuration.performDCT) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[0]))) {
+					if (checkRadixOrder && (!disableReferenceLUT_DCT) && (axis->specializationConstants.axis_id >= 1) && (!((!axis->specializationConstants.reorderFourStep) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] > 1))) && ((axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[0][0].specializationConstants.fft_dim_full.data.i) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] == 1) && (axis->specializationConstants.fft_dim_full.data.i < axis->specializationConstants.maxSingleSizeStrided.data.i / axis->specializationConstants.registerBoost)) && ((((!axis->specializationConstants.performDCT) && (!axis->specializationConstants.performDST)) && (!axis->specializationConstants.performDST)) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[0]))) {
 						axis->bufferLUT = FFTPlan->axes[0][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 						axis->bufferLUTDeviceMemory = FFTPlan->axes[0][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -937,7 +872,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
                                         }
                                     }
                                 }
-                                if (checkRadixOrder && (axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[p][0].specializationConstants.fft_dim_full.data.i) && ((!app->configuration.performDCT) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[p]))) {
+                                if (checkRadixOrder && (!disableReferenceLUT_DCT) && (axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[p][0].specializationConstants.fft_dim_full.data.i) && (((!axis->specializationConstants.performDCT) && (!axis->specializationConstants.performDST)) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[p]))) {
                                     axis->bufferLUT = FFTPlan->axes[p][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
                                     axis->bufferLUTDeviceMemory = FFTPlan->axes[p][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -1037,53 +972,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 		}
 		else {
 			double double_PI = 3.14159265358979323846264338327950288419716939937510;
-			if (axis->specializationConstants.axis_upload_id > 0) {
-				if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
-					axis->specializationConstants.startDCT3LUT.type = 31;
-					axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-					if (app->configuration.useLUT_4step == 1) axis->specializationConstants.startDCT3LUT.data.i += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
-					axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2)) * 2 * sizeof(float);
-				}
-				else {
-					if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
-						axis->specializationConstants.startDCT3LUT.type = 31;
-						axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-						if (app->configuration.useLUT_4step == 1) axis->specializationConstants.startDCT3LUT.data.i += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i;
-						axis->specializationConstants.startDCT4LUT.type = 31;
-						axis->specializationConstants.startDCT4LUT.data.i = (axis->specializationConstants.startDCT3LUT.data.i + (axis->specializationConstants.fftDim.data.i / 4 + 2));
-						axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2) + app->configuration.size[axis->specializationConstants.axis_id] / 2) * 2 * sizeof(float);
-					}
-					else
-						axis->bufferLUTSize = (maxStageSum) * 2 * sizeof(float);
-				}
-				if (app->configuration.useLUT_4step == 1) axis->bufferLUTSize += axis->specializationConstants.stageStartSize.data.i * axis->specializationConstants.fftDim.data.i * 2 * sizeof(float);
-			}
-			else {
-				if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
-					axis->specializationConstants.startDCT3LUT.type = 31;
-					axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-					axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2)) * 2 * sizeof(float);
-				}
-				else {
-					if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
-						axis->specializationConstants.startDCT3LUT.type = 31;
-						axis->specializationConstants.startDCT3LUT.data.i = (maxStageSum);
-						axis->specializationConstants.startDCT4LUT.type = 31;
-						axis->specializationConstants.startDCT4LUT.data.i = (axis->specializationConstants.startDCT3LUT.data.i + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2));
-						axis->bufferLUTSize = (maxStageSum + (app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2) + app->configuration.size[axis->specializationConstants.axis_id] / 2) * 2 * sizeof(float);
-					}
-					else
-						axis->bufferLUTSize = (maxStageSum) * 2 * sizeof(float);
-				}
-			}
-			if (axis->specializationConstants.useRader) {
-				for (pfUINT i = 0; i < axis->specializationConstants.numRaderPrimes; i++) {
-					if (!axis->specializationConstants.inline_rader_kernel) {
-						axis->specializationConstants.raderContainer[i].RaderKernelOffsetLUT = axis->bufferLUTSize / (2 * sizeof(float));
-						axis->bufferLUTSize += (axis->specializationConstants.raderContainer[i].prime - 1) * 2 * sizeof(float);
-					}
-				}
-			}
+			axis->bufferLUTSize = currentLUTPos * 2 * sizeof(float);		
 			if (axis->bufferLUTSize == 0) axis->bufferLUTSize = sizeof(float);
 			float* tempLUT = (float*)malloc(axis->bufferLUTSize);
 			if (!tempLUT) {
@@ -1204,19 +1093,21 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 					}
 				}
 			}
-			if ((app->configuration.performDCT == 2) || (app->configuration.performDCT == 3)) {
+			if ((((((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 1))) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) || (((((axis->specializationConstants.performDCT == 2) || (axis->specializationConstants.performDST == 2)) && (axis->specializationConstants.actualInverse == 0)) || (((axis->specializationConstants.performDCT == 3) || (axis->specializationConstants.performDST == 3)) && (axis->specializationConstants.actualInverse == 1))) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 2 + 2; j++) {
 					double angle = (double_PI / 2.0 / (double)(app->configuration.size[axis->specializationConstants.axis_id])) * j;
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j] = (float)pfcos(angle);
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j + 1] = (float)pfsin(angle);
 				}
 			}
-			if ((app->configuration.performDCT == 4) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0)) {
+			if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1)))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 4 + 2; j++) {
 					double angle = (double_PI / 2.0 / (double)(app->configuration.size[axis->specializationConstants.axis_id] / 2)) * j;
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j] = (float)pfcos(angle);
 					tempLUT[2 * axis->specializationConstants.startDCT3LUT.data.i + 2 * j + 1] = (float)pfsin(angle);
 				}
+			}
+			if (((axis->specializationConstants.performDCT == 4) || (axis->specializationConstants.performDST == 4)) && (app->configuration.size[axis->specializationConstants.axis_id] % 2 == 0) && (((axis->specializationConstants.axis_upload_id == 0) && (!((axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 0) && (axis->specializationConstants.numAxisUploads > 1))))) || ((axis->specializationConstants.axis_upload_id == (axis->specializationConstants.numAxisUploads-1)) && (axis->specializationConstants.useBluesteinFFT && (axis->specializationConstants.reverseBluesteinMultiUpload == 1))))) {
 				for (pfUINT j = 0; j < app->configuration.size[axis->specializationConstants.axis_id] / 2; j++) {
 					double angle = (-double_PI / 8.0 / (double)(app->configuration.size[axis->specializationConstants.axis_id] / 2)) * (2 * j + 1);
 					tempLUT[2 * axis->specializationConstants.startDCT4LUT.data.i + 2 * j] = (float)pfcos(angle);
@@ -1225,7 +1116,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 			}
 			axis->referenceLUT = 0;
 
-			if (axis->specializationConstants.reverseBluesteinMultiUpload == 1) {
+			if ((axis->specializationConstants.reverseBluesteinMultiUpload == 1) && (!disableReferenceLUT_DCT)) {
 				axis->bufferLUT = FFTPlan->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 				axis->bufferLUTDeviceMemory = FFTPlan->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -1234,7 +1125,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 				axis->referenceLUT = 1;
 			}
 			else {
-				if ((!inverse) && (!app->configuration.makeForwardPlanOnly)) {
+				if ((!inverse) && (!app->configuration.makeForwardPlanOnly) && (!disableReferenceLUT_DCT)) {
 					axis->bufferLUT = app->localFFTPlan_inverse->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 					axis->bufferLUTDeviceMemory = app->localFFTPlan_inverse->axes[axis->specializationConstants.axis_id][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -1255,7 +1146,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
 							}
 						}
 					}
-					if (checkRadixOrder && (axis->specializationConstants.axis_id >= 1) && (!((!axis->specializationConstants.reorderFourStep) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] > 1))) && ((axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[0][0].specializationConstants.fft_dim_full.data.i) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] == 1) && (axis->specializationConstants.fft_dim_full.data.i < axis->specializationConstants.maxSingleSizeStrided.data.i / axis->specializationConstants.registerBoost)) && ((!app->configuration.performDCT) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[0]))) {
+					if (checkRadixOrder && (!disableReferenceLUT_DCT) && (axis->specializationConstants.axis_id >= 1) && (!((!axis->specializationConstants.reorderFourStep) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] > 1))) && ((axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[0][0].specializationConstants.fft_dim_full.data.i) && (FFTPlan->numAxisUploads[axis->specializationConstants.axis_id] == 1) && (axis->specializationConstants.fft_dim_full.data.i < axis->specializationConstants.maxSingleSizeStrided.data.i / axis->specializationConstants.registerBoost)) && ((((!axis->specializationConstants.performDCT) && (!axis->specializationConstants.performDST)) && (!axis->specializationConstants.performDST)) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[0]))) {
 						axis->bufferLUT = FFTPlan->axes[0][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
 						axis->bufferLUTDeviceMemory = FFTPlan->axes[0][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -1278,7 +1169,7 @@ static inline VkFFTResult VkFFT_AllocateLUT(VkFFTApplication* app, VkFFTPlan* FF
                                         }
                                     }
                                 }
-                                if (checkRadixOrder && (axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[p][0].specializationConstants.fft_dim_full.data.i) && ((!app->configuration.performDCT) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[p]))) {
+                                if (checkRadixOrder && (!disableReferenceLUT_DCT) && (axis->specializationConstants.fft_dim_full.data.i == FFTPlan->axes[p][0].specializationConstants.fft_dim_full.data.i) && (((!axis->specializationConstants.performDCT) && (!axis->specializationConstants.performDST)) || (app->configuration.size[axis->specializationConstants.axis_id] == app->configuration.size[p]))) {
                                     axis->bufferLUT = FFTPlan->axes[p][axis->specializationConstants.axis_upload_id].bufferLUT;
 #if(VKFFT_BACKEND==0)
                                     axis->bufferLUTDeviceMemory = FFTPlan->axes[p][axis->specializationConstants.axis_upload_id].bufferLUTDeviceMemory;
@@ -1539,7 +1430,127 @@ static inline VkFFTResult VkFFT_AllocateLUT_R2C(VkFFTApplication* app, VkFFTPlan
 #elif(VKFFT_BACKEND==5)
 	#endif
 	if (app->configuration.useLUT == 1) {
-		if (app->configuration.doublePrecision || app->configuration.doublePrecisionFloatMemory) {
+		if (app->configuration.quadDoubleDoublePrecision || app->configuration.quadDoubleDoublePrecisionDoubleMemory) {
+			PfContainer in = VKFFT_ZERO_INIT;
+			PfContainer temp1 = VKFFT_ZERO_INIT;
+			in.type = 22;
+			
+			pfLD double_PI = pfFPinit("3.14159265358979323846264338327950288419716939937510");
+			axis->bufferLUTSize = (app->configuration.size[0] / 2) * 4 * sizeof(double);
+			double* tempLUT = (double*)malloc(axis->bufferLUTSize);
+			if (!tempLUT) {
+				deleteVkFFT(app);
+				return VKFFT_ERROR_MALLOC_FAILED;
+			}
+			for (pfUINT i = 0; i < app->configuration.size[0] / 2; i++) {
+				pfLD angle = double_PI * i / (app->configuration.size[0] / 2);
+				
+				in.data.d = pfcos(angle);
+				PfConvToDoubleDouble(&axis->specializationConstants, &temp1, &in);
+				tempLUT[4 * i] = (double)temp1.data.dd[0].data.d;
+				tempLUT[4 * i + 1] = (double)temp1.data.dd[1].data.d;
+				in.data.d = pfsin(angle);
+				PfConvToDoubleDouble(&axis->specializationConstants, &temp1, &in);
+				tempLUT[4 * i + 2] = (double)temp1.data.dd[0].data.d;
+				tempLUT[4 * i + 3] = (double)temp1.data.dd[1].data.d;
+			}
+			axis->referenceLUT = 0;
+			PfDeallocateContainer(&axis->specializationConstants, &temp1);
+			if ((!inverse) && (!app->configuration.makeForwardPlanOnly)) {
+				axis->bufferLUT = app->localFFTPlan_inverse->R2Cdecomposition.bufferLUT;
+#if(VKFFT_BACKEND==0)
+				axis->bufferLUTDeviceMemory = app->localFFTPlan_inverse->R2Cdecomposition.bufferLUTDeviceMemory;
+#endif
+				axis->bufferLUTSize = app->localFFTPlan_inverse->R2Cdecomposition.bufferLUTSize;
+				axis->referenceLUT = 1;
+			}
+			else {
+#if(VKFFT_BACKEND==0)
+				resFFT = allocateBufferVulkan(app, &axis->bufferLUT, &axis->bufferLUTDeviceMemory, VK_BUFFER_USAGE_STORAGE_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT, VK_MEMORY_HEAP_DEVICE_LOCAL_BIT, axis->bufferLUTSize);
+				if (resFFT != VKFFT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return resFFT;
+				}
+				resFFT = VkFFT_TransferDataFromCPU(app, tempLUT, &axis->bufferLUT, axis->bufferLUTSize);
+				if (resFFT != VKFFT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return resFFT;
+				}
+#elif(VKFFT_BACKEND==1)
+				res = cudaMalloc((void**)&axis->bufferLUT, axis->bufferLUTSize);
+				if (res != cudaSuccess) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return VKFFT_ERROR_FAILED_TO_ALLOCATE;
+				}
+				resFFT = VkFFT_TransferDataFromCPU(app, tempLUT, &axis->bufferLUT, axis->bufferLUTSize);
+				if (resFFT != VKFFT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return resFFT;
+				}
+#elif(VKFFT_BACKEND==2)
+				res = hipMalloc((void**)&axis->bufferLUT, axis->bufferLUTSize);
+				if (res != hipSuccess) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return VKFFT_ERROR_FAILED_TO_ALLOCATE;
+				}
+				resFFT = VkFFT_TransferDataFromCPU(app, tempLUT, &axis->bufferLUT, axis->bufferLUTSize);
+				if (resFFT != VKFFT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return resFFT;
+				}
+#elif(VKFFT_BACKEND==3)
+				axis->bufferLUT = clCreateBuffer(app->configuration.context[0], CL_MEM_READ_ONLY | CL_MEM_COPY_HOST_PTR, axis->bufferLUTSize, tempLUT, &res);
+				if (res != CL_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return VKFFT_ERROR_FAILED_TO_ALLOCATE;
+				}
+#elif(VKFFT_BACKEND==4)
+				ze_device_mem_alloc_desc_t device_desc = VKFFT_ZERO_INIT;
+				device_desc.stype = ZE_STRUCTURE_TYPE_DEVICE_MEM_ALLOC_DESC;
+				res = zeMemAllocDevice(app->configuration.context[0], &device_desc, axis->bufferLUTSize, sizeof(float), app->configuration.device[0], &axis->bufferLUT);
+				if (res != ZE_RESULT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return VKFFT_ERROR_FAILED_TO_ALLOCATE;
+				}
+				resFFT = VkFFT_TransferDataFromCPU(app, tempLUT, &axis->bufferLUT, axis->bufferLUTSize);
+				if (resFFT != VKFFT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return resFFT;
+				}
+#elif(VKFFT_BACKEND==5)
+				axis->bufferLUT = app->configuration.device->newBuffer(axis->bufferLUTSize, MTL::ResourceStorageModePrivate);
+
+				resFFT = VkFFT_TransferDataFromCPU(app, tempLUT, &axis->bufferLUT, axis->bufferLUTSize);
+				if (resFFT != VKFFT_SUCCESS) {
+					deleteVkFFT(app);
+					free(tempLUT);
+					tempLUT = 0;
+					return resFFT;
+				}
+#endif
+				free(tempLUT);
+				tempLUT = 0;
+			}
+		}
+		else if (app->configuration.doublePrecision || app->configuration.doublePrecisionFloatMemory) {
 			pfLD double_PI = pfFPinit("3.14159265358979323846264338327950288419716939937510");
 			axis->bufferLUTSize = (app->configuration.size[0] / 2) * 2 * sizeof(double);
 			double* tempLUT = (double*)malloc(axis->bufferLUTSize);

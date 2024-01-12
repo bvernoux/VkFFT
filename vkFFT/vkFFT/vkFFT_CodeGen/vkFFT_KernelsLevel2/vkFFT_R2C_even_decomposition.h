@@ -48,7 +48,9 @@ static inline VkFFTResult shaderGen_R2C_even_decomposition(VkFFTSpecializationCo
 	appendVersion(sc);
 	appendExtensions(sc);
 	appendLayoutVkFFT(sc);
-
+	if ((((sc->floatTypeCode/10)%10) == 3) || (((sc->floatTypeInputMemoryCode/10)%10) == 3) || (((sc->floatTypeOutputMemoryCode/10)%10) == 3)) {
+		appendQuadDoubleDoubleStruct(sc);
+	}
 	if (((!sc->LUT) || (!sc->LUT_4step)) && (sc->floatTypeCode == 2)) {
 		appendSinCos20(sc);
 	}
@@ -58,9 +60,9 @@ static inline VkFFTResult shaderGen_R2C_even_decomposition(VkFFTSpecializationCo
 	appendPushConstants(sc);
 
 	int id = 0;
-	appendInputLayoutVkFFT(sc, id, type);
+	appendInputLayoutVkFFT(sc, id);
 	id++;
-	appendOutputLayoutVkFFT(sc, id, type);
+	appendOutputLayoutVkFFT(sc, id);
 	id++;
 	if (sc->LUT) {
 		appendLUTLayoutVkFFT(sc, id);
